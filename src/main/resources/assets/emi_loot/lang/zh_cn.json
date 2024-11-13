@@ -113,7 +113,7 @@
   "emi_loot.function.copy_name.killer_direct": "直接击杀当前生物的实体",
   "emi_loot.function.copy_name.block_entity": "当前方块的方块实体",
   "emi_loot.function.copy_nbt": "复制到当前物品上的自定义 NBT 数据",
-  "emi_loot.function.decay": "一定能在爆炸中幸存",
+  "emi_loot.function.decay": "必须在爆炸中幸存",
   "emi_loot.function.fill_player_head": "使用身份信息填充玩家头颅",
   "emi_loot.function.limit_count": "堆叠数量限制为%s",
   "emi_loot.function.set_attributes": "执行以下实体属性操作：%s",
@@ -147,7 +147,7 @@
   "emi_loot.function.custom_model_data": "为掉落物设置自定义物品模型",
   "emi_loot.function.toggle_tooltip": "展开/折叠该段物品提示文本",
 
-  "emi_loot.condition.survives_explosion": "一定能在爆炸中幸存",
+  "emi_loot.condition.survives_explosion": "必须在爆炸中幸存",
   "emi_loot.condition.blockstate": "需要方块%s",
   "emi_loot.condition.blockstate.block": "为%s",
   "emi_loot.condition.table_bonus": "掉落物增加了%s",
