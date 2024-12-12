@@ -37,7 +37,7 @@ dependencies {
     modRuntimeOnly "me.fzzyhmstrs:fzzy_config:${rootProject.fzzy_config_version}"
     modRuntimeOnly "maven.modrinth:symbols-n-stuff:${rootProject.sns_version}"
 
-    modRuntimeOnly "maven.modrinth:fabric-language-kotlin:${rootProject.flk_version}"
+    modRuntimeOnly "net.fabricmc:fabric-language-kotlin:${rootProject.flk_version}"
 
     common(project(path: ":xplat", configuration: "namedElements")) { transitive false }
     shadowCommon(project(path: ":xplat", configuration: "transformProductionFabric")) { transitive false }
