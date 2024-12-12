@@ -8,17 +8,18 @@ Emi Loot is a plugin for [EMI](https://github.com/emilyploszaj/emi) that display
 Credit for loot condition icon art goes to [lxly9](https://github.com/lxly9). Thank you!!
 
 ## Known Compatible Loot or Content Mods:
-* [Lootify](https://modrinth.com/mod/lootify)
-* [Loot Config](https://www.curseforge.com/minecraft/mc-mods/loot-config)
-* [Dark Loot](https://www.curseforge.com/minecraft/mc-mods/darkloot-better-mob-loot)
 * [Amethyst Imbuement](https://modrinth.com/mod/amethyst-imbuement)
-* [Immersive Weathering](https://modrinth.com/mod/immersive-weathering)
 * [Botania](https://modrinth.com/mod/botania)
+* [Dark Loot](https://www.curseforge.com/minecraft/mc-mods/darkloot-better-mob-loot)
+* [Immersive Weathering](https://modrinth.com/mod/immersive-weathering)
+* [Loot Config](https://www.curseforge.com/minecraft/mc-mods/loot-config)
+* [Lootify](https://modrinth.com/mod/lootify)
 
 ## Known INCOMPATIBLE Mods
-* [LootJS](https://modrinth.com/mod/lootjs): Affects drops on generation, doesn't modify loot tables themselves.
-* [Better Nether](https://www.curseforge.com/minecraft/mc-mods/betternether): Hardcoded drops
+* (Neo)Forge / [Porting Lib](https://github.com/Fabricators-of-Create/Porting-Lib) Global Loot Modifiers: Affects drops on generation, doesn't modify loot tables themselves.
 * [Better End](https://www.curseforge.com/minecraft/mc-mods/betterend): Hardcoded drops
+* [Better Nether](https://www.curseforge.com/minecraft/mc-mods/betternether): Hardcoded drops
+* [LootJS](https://modrinth.com/mod/lootjs): Affects drops on generation, doesn't modify loot tables themselves.
 * [Paradise Lost](https://www.curseforge.com/minecraft/mc-mods/paradise-lost): Hardcoded drops
 
 ## TODO LIST
