@@ -39,22 +39,27 @@ public class EmiClientPlugin implements EmiPlugin {
         registry.addCategory(ARCHAEOLOGY_CATEGORY);
 
         ClientLootTables.INSTANCE.getLoots().forEach(lootReceiver -> {
-            if (!lootReceiver.isEmpty()) {
-                if (lootReceiver instanceof ClientChestLootTable) {
-                    registry.addRecipe(new ChestLootRecipe((ClientChestLootTable) lootReceiver));
+            try {
+                if (!lootReceiver.isEmpty()) {
+                    if (lootReceiver instanceof ClientChestLootTable) {
+                        registry.addRecipe(new ChestLootRecipe((ClientChestLootTable) lootReceiver));
+                    }
+                    if (lootReceiver instanceof ClientBlockLootTable) {
+                        registry.addRecipe(new BlockLootRecipe((ClientBlockLootTable) lootReceiver));
+                    }
+                    if (lootReceiver instanceof ClientMobLootTable) {
+                        registry.addRecipe(new MobLootRecipe((ClientMobLootTable) lootReceiver));
+                    }
+                    if (lootReceiver instanceof ClientGameplayLootTable) {
+                        registry.addRecipe(new GameplayLootRecipe((ClientGameplayLootTable) lootReceiver));
+                    }
+                    if (lootReceiver instanceof ClientArchaeologyLootTable) {
+                        registry.addRecipe(new ArchaeologyLootRecipe((ClientArchaeologyLootTable) lootReceiver));
+                    }
                 }
-                if (lootReceiver instanceof ClientBlockLootTable) {
-                    registry.addRecipe(new BlockLootRecipe((ClientBlockLootTable) lootReceiver));
-                }
-                if (lootReceiver instanceof ClientMobLootTable) {
-                    registry.addRecipe(new MobLootRecipe((ClientMobLootTable) lootReceiver));
-                }
-                if (lootReceiver instanceof ClientGameplayLootTable) {
-                    registry.addRecipe(new GameplayLootRecipe((ClientGameplayLootTable) lootReceiver));
-                }
-                if (lootReceiver instanceof ClientArchaeologyLootTable) {
-                    registry.addRecipe(new ArchaeologyLootRecipe((ClientArchaeologyLootTable) lootReceiver));
-                }
+            } catch (Throwable e) {
+                EMILoot.LOGGER.error("Critical error encountered while registering a loot recipe {}", lootReceiver.getId().toString());
+                EMILoot.LOGGER.error("Thrown Error: ", e);
             }
         });
     }

@@ -1,7 +1,12 @@
 package fzzyhmstrs.emi_loot.server;
 
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.registry.Registries;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
+import net.minecraft.world.World;
 
 import java.util.List;
 
@@ -30,5 +35,17 @@ public interface LootSender<T extends LootBuilder> {
             }
         }
         return id.toString();
+    }
+
+    default void writeItemStack(PacketByteBuf buf, ItemStack stack, World world) {
+        buf.writeVarInt(Registries.ITEM.getRawId(stack.getItem()));
+        buf.writeVarInt(stack.getCount());
+        NbtCompound nbt = stack.getNbt();
+        if (nbt == null) {
+            buf.writeBoolean(false);
+        } else {
+			buf.writeBoolean(true);
+			buf.writeNbt(nbt);
+        }
     }
 }
