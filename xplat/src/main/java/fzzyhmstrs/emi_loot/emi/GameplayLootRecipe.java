@@ -23,6 +23,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import org.jetbrains.annotations.Nullable;
@@ -66,10 +67,10 @@ public class GameplayLootRecipe implements EmiRecipe {
                 rawTitle = LText.translatable("emi_loot.gameplay.unknown_gameplay", gameplayName.toString());
             } else {
                 Text unknown = LText.translatable("emi_loot.gameplay.unknown");
-                rawTitle = LText.translatable("emi_loot.gameplay.unknown_gameplay", gameplayName.toString() + " " + unknown.getString());
+                rawTitle = LText.translatable("emi_loot.gameplay.unknown_gameplay", gameplayName + " " + unknown.getString());
             }
             if (EMILoot.config.isLogI18n(EMILoot.Type.GAMEPLAY)) {
-                EMILoot.LOGGER.warn("Untranslated gameplay loot table \"" + loot.id + "\" (key: \"" + key + "\")");
+				EMILoot.LOGGER.warn("Untranslated gameplay loot table \"{}\" (key: \"{}\")", loot.id, key);
             }
         } else {
             rawTitle = text;
@@ -95,6 +96,7 @@ public class GameplayLootRecipe implements EmiRecipe {
             }
         }
         if (!added) {
+            @SuppressWarnings("SequencedCollectionMethodCanBeUsed")
             Optional<ClientBuiltPool> opt = rowBuilderList.get(rowBuilderList.size() - 1).addAndTrim(newPool);
             opt.ifPresent(clientMobBuiltPool -> addWidgetBuilders(clientMobBuiltPool, true));
         }
@@ -180,8 +182,8 @@ public class GameplayLootRecipe implements EmiRecipe {
             int j = 0;
             for (ConditionalStack stack: stacks) {
                 SlotWidget widget = widgets.addSlot(stack.getIngredient(), i * 18, 11 + (18 * j));
-                String rounded = FloatTrimmer.trimFloatString(stack.weight(), EMILoot.config.chanceDecimalPlaces.get());
-                widget.appendTooltip(FcText.INSTANCE.translatable("emi_loot.percent_chance", rounded));
+                String rounded = FloatTrimmer.trimFloatString(stack.weight() / 100f, EMILoot.config.chanceDecimalPlaces.get());
+                widget.appendTooltip(FcText.INSTANCE.translatable("emi_loot.rolls", rounded).formatted(Formatting.GRAY));
                 if (EMILoot.config.isNotPlain()) {
                     for (Pair<Integer, Text> pair : stack.conditions()) {
                         widget.appendTooltip(SymbolText.of(pair.getLeft(), pair.getRight()));

@@ -1,5 +1,6 @@
 package fzzyhmstrs.emi_loot.parser.function;
 
+import fzzyhmstrs.emi_loot.mixins.SetAttributesLootFunctionAccessor;
 import fzzyhmstrs.emi_loot.parser.LootTableParser;
 import fzzyhmstrs.emi_loot.parser.processor.ListProcessors;
 import fzzyhmstrs.emi_loot.parser.processor.NumberProcessors;
@@ -21,7 +22,7 @@ public class SetAttributesFunctionParser implements FunctionParser {
 
     @Override
     public LootTableParser.LootFunctionResult parseFunction(LootFunction function, ItemStack stack, boolean parentIsAlternative, List<TextKey> conditionTexts) {
-        List<SetAttributesLootFunction.Attribute> attributes = ((SetAttributesLootFunction)function).attributes;
+        List<SetAttributesLootFunction.Attribute> attributes = ((SetAttributesLootFunctionAccessor)function).getAttributes();
         List<MutableText> list = new LinkedList<>();
         for (SetAttributesLootFunction.Attribute attribute : attributes) {
             LootNumberProvider amount = attribute.amount();

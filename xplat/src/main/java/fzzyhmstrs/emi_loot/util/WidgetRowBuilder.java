@@ -5,8 +5,10 @@ import dev.emi.emi.api.stack.EmiStack;
 import fzzyhmstrs.emi_loot.client.ClientBuiltPool;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import net.minecraft.registry.Registries;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -25,10 +27,11 @@ public class WidgetRowBuilder {
         List<ConditionalStack> list = new ArrayList<>();
         for (ClientBuiltPool pool: poolList) {
             list.addAll(
-                    pool.stacks().stream().map(
-                            stack -> stack.ingredient().stream().map(
-                                    s -> new ConditionalStack(stack.conditions(), stack.weight(), List.of(s))
-                            ).toList()
+                    pool.stacks().stream().map(stack ->
+                            stack.ingredient()
+                                    .stream()
+                                    .sorted(Comparator.comparingInt(s -> Registries.ITEM.getRawId(s.getItemStack().getItem())))
+                                    .map(s -> new ConditionalStack(stack.conditions(), stack.weight(), List.of(s))).toList()
                     ).collect(
                             ArrayList::new, ArrayList::addAll, ArrayList::addAll
                     )
@@ -84,7 +87,7 @@ public class WidgetRowBuilder {
             AtomicInteger newWidth = new AtomicInteger(14 + (11 * (((newPool.conditions().size() - 1) / 2) - 1)));
             newPool.stacks().forEach(s -> {
                 float weight = s.weight();
-                List<EmiStack> stacks = s.ingredient();
+                List<EmiStack> stacks = s.ingredient().stream().sorted(Comparator.comparingInt(s1 -> Registries.ITEM.getRawId(s1.getItemStack().getItem()))).toList();
                 if (newWidth.addAndGet(20) <= maxWidth) {
                     madeItIn.add(new ConditionalStack(s.conditions(), weight, stacks));
                 } else {

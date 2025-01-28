@@ -119,7 +119,8 @@ public class LootTableParser {
             }
             EMILoot.LOGGER.warn("Post-processing complete!");
         }
-        ConfigApi.INSTANCE.network().send(ClearPayload.INSTANCE, player);
+        if (ConfigApi.INSTANCE.network().canSend(ClearPayload.TYPE.id(), player))
+            ConfigApi.INSTANCE.network().send(ClearPayload.INSTANCE, player);
         if (EMILoot.config.parseChestLoot)
             chestSenders.forEach((id, chestSender) -> chestSender.send(player));
         if (EMILoot.config.parseBlockLoot)
@@ -140,111 +141,132 @@ public class LootTableParser {
         mobSenders.clear();
         gameplaySenders.clear();
         archaeologySenders.clear();
-        EMILoot.LOGGER.info("parsing loot tables");
-        manager.getEntrySet().forEach(entry -> {
-            LootTable table = entry.getValue();
-            parseLootTable(entry.getKey().getValue(), table);
-        });
-        if (EMILoot.config.parseMobLoot) {
-            Identifier chk = Identifier.ofVanilla("pig");
-            Registries.ENTITY_TYPE.getEntrySet().forEach((entry) -> {
-                EntityType<?> type = entry.getValue();
-                if (type == EntityType.SHEEP) {
-                    for (Identifier sheepId : ServerResourceData.SHEEP_TABLES) {
-                        parseEntityType(manager, type, sheepId, chk, emptyConditions);
-                    }
-                }
-                //perform shearing table checks. May have to improve for later updates.
-                Identifier shearingId = Identifier.of(entry.getKey().getValue().getNamespace(), "shearing/" + entry.getKey().getValue().getPath());
-                LootTable shearingTable = manager.get(shearingId);
-                if (shearingTable != null && shearingTable != LootTable.EMPTY) {
-                    parseEntityType(manager, type, shearingId, chk, List.of(MatchToolLootCondition.builder(ItemPredicate.Builder.create().items(Items.SHEARS)).build()));
-                }
-                parseEntityType(manager, type, type.getLootTableId().getValue(), chk, emptyConditions);
+        try {
+            EMILoot.LOGGER.info("parsing loot tables");
+            manager.getEntrySet().forEach(entry -> {
+                LootTable table = entry.getValue();
+                parseLootTable(entry.getKey().getValue(), table);
             });
+            if (EMILoot.config.parseMobLoot) {
+                Identifier chk = Identifier.ofVanilla("pig");
+                Registries.ENTITY_TYPE.getEntrySet().forEach((entry) -> {
+                    EntityType<?> type = entry.getValue();
+                    if (type == EntityType.SHEEP) {
+                        for (Identifier sheepId : ServerResourceData.SHEEP_TABLES) {
+                            parseEntityType(manager, type, sheepId, chk, emptyConditions);
+                        }
+                    }
+                    //perform shearing table checks. May have to improve for later updates.
+                    Identifier shearingId = Identifier.of(entry.getKey().getValue().getNamespace(), "shearing/" + entry.getKey().getValue().getPath());
+                    LootTable shearingTable = manager.get(shearingId);
+                    if (shearingTable != null && shearingTable != LootTable.EMPTY) {
+                        parseEntityType(manager, type, shearingId, chk, List.of(MatchToolLootCondition.builder(ItemPredicate.Builder.create().items(Items.SHEARS)).build()));
+                    }
+                    parseEntityType(manager, type, type.getLootTableId().getValue(), chk, emptyConditions);
+                });
+            }
+            Multimap<Identifier, LootTable> missedDrops = ServerResourceData.getMissedDirectDrops(parsedDirectDrops);
+            for (Map.Entry<Identifier, LootTable> entry : missedDrops.entries()) {
+                if (EMILoot.DEBUG) EMILoot.LOGGER.info("parsing missed direct drop table: {}", entry.getKey());
+                parseLootTable(entry.getKey(), entry.getValue());
+            }
+            EMILoot.LOGGER.info("finished parsing loot tables");
+            hasParsedLootTables = true;
+        } catch (Throwable e) {
+            EMILoot.LOGGER.error("Critical unhandled error encountered while parsing loot tables. Results may be incomplete.");
+            EMILoot.LOGGER.error("Thrown Error: ", e);
         }
-        Multimap<Identifier, LootTable> missedDrops = ServerResourceData.getMissedDirectDrops(parsedDirectDrops);
-        for (Map.Entry<Identifier, LootTable> entry : missedDrops.entries()) {
-            if (EMILoot.DEBUG) EMILoot.LOGGER.info("parsing missed direct drop table: " + entry.getKey());
-            parseLootTable(entry.getKey(), entry.getValue());
-        }
-        EMILoot.LOGGER.info("finished parsing loot tables");
-        hasParsedLootTables = true;
     }
 
     private static void parseLootTable(Identifier id, LootTable lootTable) {
         if (ServerResourceData.skipTable(id)) return;
         currentTable = id.toString();
-        LootContextType type = lootTable.getType();
-        if (type == LootContextTypes.CHEST && EMILoot.config.parseChestLoot) {
-            chestSenders.put(id, parseChestLootTable(lootTable, id));
-        } else if (type == LootContextTypes.BLOCK && EMILoot.config.parseBlockLoot) {
-            blockSenders.put(id, parseBlockLootTable(lootTable, id));
-        } else if ((type == LootContextTypes.FISHING || type == LootContextTypes.GIFT ||type == LootContextTypes.BARTER) && EMILoot.config.parseGameplayLoot) {
-            gameplaySenders.put(id, parseGameplayLootTable(lootTable, id));
-        } else if ((type == LootContextTypes.ARCHAEOLOGY && EMILoot.config.parseArchaeologyLoot)) {
-            archaeologySenders.put(id, parseArchaeologyTable(lootTable, id));
+        try {
+            LootContextType type = lootTable.getType();
+            if (type == LootContextTypes.CHEST && EMILoot.config.parseChestLoot) {
+                chestSenders.put(id, parseChestLootTable(lootTable, id));
+            } else if (type == LootContextTypes.BLOCK && EMILoot.config.parseBlockLoot) {
+                blockSenders.put(id, parseBlockLootTable(lootTable, id));
+            } else if ((type == LootContextTypes.FISHING || type == LootContextTypes.GIFT || type == LootContextTypes.BARTER) && EMILoot.config.parseGameplayLoot) {
+                gameplaySenders.put(id, parseGameplayLootTable(lootTable, id));
+            } else if ((type == LootContextTypes.ARCHAEOLOGY && EMILoot.config.parseArchaeologyLoot)) {
+                archaeologySenders.put(id, parseArchaeologyTable(lootTable, id));
+            }
+        } catch (Throwable e) {
+            EMILoot.LOGGER.error("Critical error encountered while parsing Loot Table {}", id);
+            EMILoot.LOGGER.error("Thrown Error: ", e);
         }
     }
 
     public static void postProcess(PostProcessor process) {
         if (!hasParsedLootTables) return;
-        for (LootSender<?> sender : chestSenders.values()) {
-            for (LootBuilder builder : sender.getBuilders()) {
-                for (LootPoolEntry entry: builder.getEntriesToPostProcess(process)) {
-                    if (EMILoot.DEBUG) EMILoot.LOGGER.info("Post-processing builder in chest sender: " + sender.getId());
-                    parseLootPoolEntry(builder, entry, process);
+        try {
+            for (LootSender<?> sender : chestSenders.values()) {
+                for (LootBuilder builder : sender.getBuilders()) {
+                    for (LootPoolEntry entry : builder.getEntriesToPostProcess(process)) {
+                        if (EMILoot.DEBUG) EMILoot.LOGGER.info("Post-processing builder in chest sender: {}", sender.getId());
+                        parseLootPoolEntry(builder, entry, process);
+                    }
                 }
+                sender.build();
             }
-            sender.build();
-        }
-        for (LootSender<?> sender : blockSenders.values()) {
-            for (LootBuilder builder : sender.getBuilders()) {
-                for (LootPoolEntry entry: builder.getEntriesToPostProcess(process)) {
-                    if (EMILoot.DEBUG) EMILoot.LOGGER.info("Post-processing builder in block sender: " + sender.getId());
-                    parseLootPoolEntry(builder, entry, process);
+            for (LootSender<?> sender : blockSenders.values()) {
+                for (LootBuilder builder : sender.getBuilders()) {
+                    for (LootPoolEntry entry : builder.getEntriesToPostProcess(process)) {
+                        if (EMILoot.DEBUG) EMILoot.LOGGER.info("Post-processing builder in block sender: {}", sender.getId());
+                        parseLootPoolEntry(builder, entry, process);
+                    }
                 }
+                sender.build();
             }
-            sender.build();
-        }
-        for (LootSender<?> sender : mobSenders.values()) {
-            for (LootBuilder builder : sender.getBuilders()) {
-                for (LootPoolEntry entry: builder.getEntriesToPostProcess(process)) {
-                    if (EMILoot.DEBUG) EMILoot.LOGGER.info("Post-processing builder in mob sender: " + sender.getId());
-                    parseLootPoolEntry(builder, entry, process);
+            for (LootSender<?> sender : mobSenders.values()) {
+                for (LootBuilder builder : sender.getBuilders()) {
+                    for (LootPoolEntry entry : builder.getEntriesToPostProcess(process)) {
+                        if (EMILoot.DEBUG) EMILoot.LOGGER.info("Post-processing builder in mob sender: {}", sender.getId());
+                        parseLootPoolEntry(builder, entry, process);
+                    }
                 }
+                sender.build();
             }
-            sender.build();
-        }
-        for (LootSender<?> sender : gameplaySenders.values()) {
-            for (LootBuilder builder : sender.getBuilders()) {
-                for (LootPoolEntry entry: builder.getEntriesToPostProcess(process)) {
-                    if (EMILoot.DEBUG) EMILoot.LOGGER.info("Post-processing builder in gameplay sender: " + sender.getId());
-                    parseLootPoolEntry(builder, entry, process);
+            for (LootSender<?> sender : gameplaySenders.values()) {
+                for (LootBuilder builder : sender.getBuilders()) {
+                    for (LootPoolEntry entry : builder.getEntriesToPostProcess(process)) {
+                        if (EMILoot.DEBUG) EMILoot.LOGGER.info("Post-processing builder in gameplay sender: {}", sender.getId());
+                        parseLootPoolEntry(builder, entry, process);
+                    }
                 }
+                sender.build();
             }
-            sender.build();
-        }
-        for (LootSender<?> sender : archaeologySenders.values()) {
-            for (LootBuilder builder : sender.getBuilders()) {
-                for (LootPoolEntry entry : builder.getEntriesToPostProcess(process)) {
-                    if(EMILoot.DEBUG) EMILoot.LOGGER.info("Post-processing builder in archaeology sender: " + sender.getId());
-                    parseLootPoolEntry(builder, entry, process);
+            for (LootSender<?> sender : archaeologySenders.values()) {
+                for (LootBuilder builder : sender.getBuilders()) {
+                    for (LootPoolEntry entry : builder.getEntriesToPostProcess(process)) {
+                        if (EMILoot.DEBUG) EMILoot.LOGGER.info("Post-processing builder in archaeology sender: {}", sender.getId());
+                        parseLootPoolEntry(builder, entry, process);
+                    }
                 }
+                sender.build();
             }
-            sender.build();
+            postProcessors.put(process, true);
+        } catch (Throwable e) {
+            EMILoot.LOGGER.error("Critical error encountered while post-processing for {}", process);
+            EMILoot.LOGGER.error("Thrown Error: ", e);
         }
-        postProcessors.put(process, true);
     }
 
     private static void parseEntityType(Registry<LootTable> manager, EntityType<?> type, Identifier mobTableId, Identifier fallback, List<LootCondition> addedConditions) {
-        Identifier mobId = Registries.ENTITY_TYPE.getId(type);
-        LootTable mobTable = manager.get(mobTableId);
-        if ((type == EntityType.PIG && mobId.equals(fallback) || mobTable != LootTable.EMPTY) && mobTable != null) {
-            currentTable = mobTableId.toString();
-            mobSenders.put(mobTableId, parseMobLootTable(mobTable, mobTableId, mobId, addedConditions));
-        } else {
-            if (EMILoot.DEBUG) EMILoot.LOGGER.warn("Found empty mob table at id: " + mobTableId);
+        try {
+            Identifier mobId = Registries.ENTITY_TYPE.getId(type);
+            LootTable mobTable = manager.get(mobTableId);
+            if ((type == EntityType.PIG && mobId.equals(fallback) || mobTable != LootTable.EMPTY) && mobTable != null) {
+                if (ServerResourceData.skipTable(mobTableId)) return;
+                currentTable = mobTableId.toString();
+                mobSenders.put(mobTableId, parseMobLootTable(mobTable, mobTableId, mobId, addedConditions));
+            } else {
+                if (EMILoot.DEBUG) EMILoot.LOGGER.warn("Found empty mob table at id: {}", mobTableId);
+            }
+        } catch (Throwable e) {
+            EMILoot.LOGGER.error("Critical error encountered while parsing Mob Loot Table {}", mobTableId.toString());
+            EMILoot.LOGGER.error("Thrown Error: ", e);
         }
     }
 
@@ -291,9 +313,9 @@ public class LootTableParser {
     private static void parseBlockLootTableInternal(LootTable lootTable, BlockLootTableSender sender, boolean isDirect) {
         for (LootPool pool : ((LootTableAccessor) lootTable).getPools()) {
             List<LootCondition> conditions = ((LootPoolAccessor) pool).getConditions();
-            List<LootConditionResult> parsedConditions = parseLootConditions(conditions,ItemStack.EMPTY,false);
+            List<LootConditionResult> parsedConditions = parseLootConditions(conditions, ItemStack.EMPTY, false);
             if (isDirect) {
-                if (EMILoot.DEBUG) EMILoot.LOGGER.info("Adding direct drop condition to " + currentTable);
+                if (EMILoot.DEBUG) EMILoot.LOGGER.info("Adding direct drop block condition to {}", currentTable);
                 parsedConditions.add(new LootConditionResult(TextKey.of("emi_loot.condition.direct_drop")));
             }
             List<LootFunction> functions = ((LootPoolAccessor) pool).getFunctions();
@@ -337,12 +359,13 @@ public class LootTableParser {
         }
     }
 
-    private static void parseMobLootTableInternal(LootTable lootTable, MobLootTableSender sender, boolean isDirect, List<LootCondition> addedConditions) {
+    @SuppressWarnings("unused")
+	private static void parseMobLootTableInternal(LootTable lootTable, MobLootTableSender sender, boolean isDirect, List<LootCondition> addedConditions) {
         for (LootPool pool : ((LootTableAccessor) lootTable).getPools()) {
             List<LootCondition> conditions = ((LootPoolAccessor) pool).getConditions();
             List<LootConditionResult> parsedConditions = parseLootConditions(conditions, ItemStack.EMPTY, false);
             if (isDirect) {
-                if (EMILoot.DEBUG) EMILoot.LOGGER.info("Adding direct drop condition to " + currentTable);
+                if (EMILoot.DEBUG) EMILoot.LOGGER.info("Adding direct drop mob condition to {}", currentTable);
                 parsedConditions.add(new LootConditionResult(TextKey.of("emi_loot.condition.direct_drop")));
             }
             List<LootFunction> functions = ((LootPoolAccessor) pool).getFunctions();
@@ -428,9 +451,9 @@ public class LootTableParser {
             return parseItemEntry(itemEntry, parentIsAlternative);
         } else if(entry instanceof AlternativeEntry alternativeEntry) {
             return parseAlternativeEntry(alternativeEntry);
-        }else if(entry instanceof GroupEntry groupEntry) {
+        } else if(entry instanceof GroupEntry groupEntry) {
             return parseGroupEntry(groupEntry, parentIsAlternative);
-        }else if(entry instanceof SequenceEntry sequenceEntry) {
+        } else if(entry instanceof SequenceEntry sequenceEntry) {
             return parseSequenceEntry(sequenceEntry, parentIsAlternative);
         } else if(entry instanceof TagEntry tagEntry) {
             return  parseTagEntry(tagEntry, parentIsAlternative);
@@ -467,7 +490,7 @@ public class LootTableParser {
 
     static List<ItemEntryResult> parseTagEntry(TagEntry entry, boolean parentIsAlternative) {
         TagKey<Item> items = ((TagEntryAccessor) entry).getName();
-        if (EMILoot.DEBUG) EMILoot.LOGGER.info(">>> Parsing tag entry " + items.id());
+        if (EMILoot.DEBUG) EMILoot.LOGGER.info(">>> Parsing tag entry {}", items.id());
         Iterable<RegistryEntry<Item>> itemsItr = Registries.ITEM.iterateEntries(items);
         List<ItemEntryResult> returnList = new LinkedList<>();
         //if (EMILoot.DEBUG) EMILoot.LOGGER.info(itemsItr.toString());
@@ -489,7 +512,7 @@ public class LootTableParser {
         List<TextKey> conditionsTexts = parseLootConditionTexts(conditions, ItemStack.EMPTY, true);
         List<ItemEntryResult> results = new LinkedList<>();
         children.forEach((lootEntry)-> {
-            List<ItemEntryResult> result = parseLootPoolEntry(lootEntry,true);
+            List<ItemEntryResult> result = parseLootPoolEntry(lootEntry, true);
             result.forEach(resultEntry -> {
                 resultEntry.conditions.addAll(conditionsTexts);
                 results.add(resultEntry);
@@ -504,7 +527,7 @@ public class LootTableParser {
         List<TextKey> conditionsTexts = parseLootConditionTexts(conditions, ItemStack.EMPTY, parentIsAlternative);
         List<ItemEntryResult> results = new LinkedList<>();
         children.forEach((lootEntry)-> {
-            List<ItemEntryResult> result = parseLootPoolEntry(lootEntry,parentIsAlternative);
+            List<ItemEntryResult> result = parseLootPoolEntry(lootEntry, parentIsAlternative);
             result.forEach(resultEntry -> {
                 resultEntry.conditions.addAll(conditionsTexts);
                 results.add(resultEntry);
@@ -520,7 +543,7 @@ public class LootTableParser {
         List<ItemEntryResult> results = new LinkedList<>();
         TextKey sequenceCondition = TextKey.of("emi_loot.condition.sequence");
         children.forEach((lootEntry)-> {
-            List<ItemEntryResult> result = parseLootPoolEntry(lootEntry,parentIsAlternative);
+            List<ItemEntryResult> result = parseLootPoolEntry(lootEntry, parentIsAlternative);
             result.forEach(resultEntry -> {
                 resultEntry.conditions.addAll(conditionsTexts);
                 resultEntry.conditions.add(sequenceCondition);
@@ -574,8 +597,8 @@ public class LootTableParser {
         try {
             type = function.getType();
         } catch (Exception e) {
-            EMILoot.LOGGER.error("failed to determine a function type for stack " + stack.getName() + " in table " + currentTable);
-            e.printStackTrace();
+			EMILoot.LOGGER.error("Failed to determine a function type for stack {} in table {}", stack.getName(), currentTable);
+            EMILoot.LOGGER.error("Thrown Error:", e);
             return LootFunctionResult.EMPTY;
         }
         List<TextKey> conditionsTexts;
@@ -588,8 +611,8 @@ public class LootTableParser {
         try {
             return LootParserRegistry.parseFunction(function, stack, type, parentIsAlternative, conditionsTexts);
         } catch(Exception e) {
-            EMILoot.LOGGER.error("Failed to parse LootCondition of type " + type + " for stack " + stack.getName() + " in table " + currentTable);
-            e.printStackTrace();
+			EMILoot.LOGGER.error("Failed to parse LootFunction of type {} for stack {} in table {}", type, stack.getName(), currentTable);
+            EMILoot.LOGGER.error("Thrown Error:", e);
             return LootFunctionResult.EMPTY;
         }
     }
@@ -673,14 +696,14 @@ public class LootTableParser {
         try {
             type = condition.getType();
         } catch (Exception e) {
-            EMILoot.LOGGER.error("failed to determine a condition type for stack " + stack.getName() + " in table " + currentTable);
+			EMILoot.LOGGER.error("failed to determine a condition type for stack {} in table {}", stack.getName(), currentTable);
             return Collections.singletonList(LootConditionResult.EMPTY);
         }
         try {
             return LootParserRegistry.parseCondition(condition, type, stack, parentIsAlternative);
         } catch (Exception e) {
-            EMILoot.LOGGER.error("Failed to parse LootCondition of type " + condition.getType() + " for stack " + stack.getName() + " in table " + currentTable);
-            e.printStackTrace();
+			EMILoot.LOGGER.error("Failed to parse LootCondition of type {} for stack {} in table {}", condition.getType(), stack.getName(), currentTable);
+            EMILoot.LOGGER.error("Thrown Error:", e);
             return Collections.singletonList(LootConditionResult.EMPTY);
         }
     }
@@ -718,7 +741,8 @@ public class LootTableParser {
     ) {
         public static LootFunctionResult EMPTY = new LootFunctionResult(TextKey.empty(), net.minecraft.item.ItemStack.EMPTY, new LinkedList<>());
 
-        public boolean skip() {
+        @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+		public boolean skip() {
             return conditions.isEmpty() && text.skip();
         }
     }

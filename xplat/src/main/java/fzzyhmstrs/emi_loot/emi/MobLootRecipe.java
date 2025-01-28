@@ -32,6 +32,7 @@ import net.minecraft.registry.Registries;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.DyeColor;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.Box;
@@ -44,6 +45,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+@SuppressWarnings("SequencedCollectionMethodCanBeUsed")
 public class MobLootRecipe implements EmiRecipe {
 
     //private final static Map<EntityType<?>, Integer> needsElevating;
@@ -233,8 +235,8 @@ public class MobLootRecipe implements EmiRecipe {
             int j = 0;
             for (ConditionalStack stack: stacks) {
                 SlotWidget widget = widgets.addSlot(stack.getIngredient(), i * 18, 11 + (18 * j));
-                String rounded = FloatTrimmer.trimFloatString(stack.weight(), EMILoot.config.chanceDecimalPlaces.get());
-                widget.appendTooltip(FcText.INSTANCE.translatable("emi_loot.percent_chance", rounded));
+                String rounded = FloatTrimmer.trimFloatString(Math.max(stack.weight() / 100f, 0.01f), EMILoot.config.chanceDecimalPlaces.get());
+                widget.appendTooltip(FcText.INSTANCE.translatable("emi_loot.rolls", rounded).formatted(Formatting.GRAY));
                 if (EMILoot.config.isNotPlain()) {
                     for (Pair<Integer, Text> pair : stack.conditions()) {
                         widget.appendTooltip(SymbolText.of(pair.getLeft(), pair.getRight()));
