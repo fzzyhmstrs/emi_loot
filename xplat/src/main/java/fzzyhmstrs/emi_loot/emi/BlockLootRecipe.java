@@ -23,6 +23,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.Items;
 import net.minecraft.registry.Registries;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import org.jetbrains.annotations.Nullable;
@@ -66,7 +67,8 @@ public class BlockLootRecipe implements EmiRecipe {
             builder = new WidgetRowBuilder(115);
             newBuilder = true;
         } else {
-            builder = rowBuilderList.get(rowBuilderList.size() - 1);
+			//noinspection SequencedCollectionMethodCanBeUsed
+			builder = rowBuilderList.get(rowBuilderList.size() - 1);
         }
         Optional<ClientBuiltPool> opt = builder.addAndTrim(newPool);
         if (newBuilder) rowBuilderList.add(builder);
@@ -146,8 +148,8 @@ public class BlockLootRecipe implements EmiRecipe {
             int j = 0;
             for (ConditionalStack stack: stacks) {
                 SlotWidget widget = widgets.addSlot(stack.getIngredient(), i * 18, 18 * j);
-                String rounded = FloatTrimmer.trimFloatString(stack.weight(), EMILoot.config.chanceDecimalPlaces.get());
-                widget.appendTooltip(FcText.INSTANCE.translatable("emi_loot.percent_chance", rounded));
+                String rounded = FloatTrimmer.trimFloatString(Math.max(stack.weight() / 100f, 0.01f), EMILoot.config.chanceDecimalPlaces.get());
+                widget.appendTooltip(FcText.INSTANCE.translatable("emi_loot.rolls", rounded).formatted(Formatting.GRAY));
                 if (EMILoot.config.isNotPlain()) {
                     for (Pair<Integer, Text> pair : stack.conditions()) {
                         widget.appendTooltip(SymbolText.of(pair.getLeft(), pair.getRight()));

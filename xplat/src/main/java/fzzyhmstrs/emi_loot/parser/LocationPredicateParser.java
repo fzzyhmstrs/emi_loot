@@ -2,6 +2,7 @@ package fzzyhmstrs.emi_loot.parser;
 
 import fzzyhmstrs.emi_loot.EMILoot;
 import fzzyhmstrs.emi_loot.util.LText;
+import net.minecraft.client.resource.language.I18n;
 import net.minecraft.predicate.BlockPredicate;
 import net.minecraft.predicate.FluidPredicate;
 import net.minecraft.predicate.LightPredicate;
@@ -9,6 +10,7 @@ import net.minecraft.predicate.NumberRange;
 import net.minecraft.predicate.entity.LocationPredicate;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.text.Text;
+import net.minecraft.util.Util;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.structure.Structure;

@@ -13,12 +13,14 @@ import it.unimi.dsi.fastutil.objects.Object2FloatOpenHashMap;
 import net.minecraft.block.Block;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.registry.Registries;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import net.minecraft.world.World;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -150,7 +152,10 @@ abstract public class AbstractTextKeyParsingClientLootTable<T extends LootReceiv
                 }
                 emiConsolidatedMap.put((float) consolidatedWeight, emiStacks);
             });
-            finalList.add(new ClientBuiltPool(builtList, emiConsolidatedMap.float2ObjectEntrySet().stream().map(entry -> new ConditionalStack(builtList, entry.getFloatKey(), entry.getValue())).toList()));
+            finalList.add(new ClientBuiltPool(builtList, emiConsolidatedMap.float2ObjectEntrySet().stream().map(entry -> {
+                List<EmiStack> sortedList = entry.getValue().stream().sorted(Comparator.comparingInt(s -> Registries.ITEM.getRawId(s.getItemStack().getItem()))).toList();
+                return new ConditionalStack(builtList, entry.getFloatKey(), sortedList);
+            }).toList()));
         });
         builtItems = finalList;
     }
@@ -164,78 +169,87 @@ abstract public class AbstractTextKeyParsingClientLootTable<T extends LootReceiv
     abstract T filledTableToReturn(Pair<Identifier, Identifier> ids, Map<List<TextKey>, ClientRawPool> itemMap);
 
     @Override
-    public LootReceiver fromBuf(PacketByteBuf buf) {
+    public LootReceiver fromBuf(PacketByteBuf buf, World world) {
         boolean isEmpty = true;
-
-        Pair<Identifier, Identifier> ids = getBufId(buf);
-        Identifier id = ids.getLeft();
-        if (EMILoot.DEBUG) EMILoot.LOGGER.info("parsing table " + id);
-        int builderCount = buf.readShort();
-        if (builderCount == -1) {
-            return simpleTableToReturn(ids, buf);
+        Pair<Identifier, Identifier> ids;
+        Identifier id;
+        try {
+            ids = getBufId(buf);
+            id = ids.getLeft();
+        } catch (Throwable e) {
+            throw new DecoderException("Parsing of Loot Receiver failed before id could be parsed", e);
         }
-
-        Map<List<TextKey>, ClientRawPool> itemMap = new HashMap<>();
-        //shortcut -1 means a simple table. One guaranteed drop of quantity 1 with no conditions.
-
-        for (int b = 0; b < builderCount; b++) {
-
-            List<TextKey> qualifierList = new LinkedList<>();
-
-            int conditionSize = buf.readShort();
-            for (int i = 0; i < conditionSize; i++) {
-                try {
-                    TextKey key = TextKey.fromBuf(buf);
-                    qualifierList.add(key);
-                } catch (DecoderException e) {
-                    EMILoot.LOGGER.error("Client table " + id + " had a TextKey decoding error while reading a loot condition!");
-                }
+        try {
+            if (EMILoot.DEBUG) EMILoot.LOGGER.info("parsing table {}", id);
+            int builderCount = buf.readShort();
+            if (builderCount == -1) {
+                return simpleTableToReturn(ids, buf);
             }
 
-            int functionSize = buf.readShort();
-            for (int i = 0; i < functionSize; i++) {
-                try {
-                    TextKey key = TextKey.fromBuf(buf);
-                    qualifierList.add(key);
-                } catch (DecoderException e) {
-                    EMILoot.LOGGER.error("Client table " + id + " had a TextKey decoding error while reading a loot function!");
-                }
-            }
+            Map<List<TextKey>, ClientRawPool> itemMap = new HashMap<>();
+            //shortcut -1 means a simple table. One guaranteed drop of quantity 1 with no conditions.
 
-            ClientRawPool pool = itemMap.getOrDefault(qualifierList, new ClientRawPool(new HashMap<>()));
+            for (int b = 0; b < builderCount; b++) {
 
-            int pileSize = buf.readShort();
-            for (int i = 0; i < pileSize; i++) {
+                List<TextKey> qualifierList = new LinkedList<>();
 
-                List<TextKey> pileQualifierList = new LinkedList<>();
-
-                int pileQualifierSize = buf.readShort();
-                for (int j = 0; j < pileQualifierSize; j++) {
+                int conditionSize = buf.readShort();
+                for (int i = 0; i < conditionSize; i++) {
                     try {
                         TextKey key = TextKey.fromBuf(buf);
-                        pileQualifierList.add(key);
+                        qualifierList.add(key);
                     } catch (DecoderException e) {
-                        EMILoot.LOGGER.error("Client table " + id + " had a TextKey decoding error while reading an item pile qualifier!");
+                        EMILoot.LOGGER.error("Client table " + id + " had a TextKey decoding error while reading a loot condition!");
                     }
                 }
 
-                Object2FloatMap<ItemStack> pileItemMap = pool.map().getOrDefault(pileQualifierList, new Object2FloatOpenHashMap<>());
-
-                int pileItemSize = buf.readShort();
-                for (int j = 0; j < pileItemSize; j++) {
-                    ItemStack stack = buf.readItemStack();
-                    float weight = buf.readFloat();
-                    pileItemMap.put(stack, weight);
-                    isEmpty = false;
+                int functionSize = buf.readShort();
+                for (int i = 0; i < functionSize; i++) {
+                    try {
+                        TextKey key = TextKey.fromBuf(buf);
+                        qualifierList.add(key);
+                    } catch (DecoderException e) {
+                        EMILoot.LOGGER.error("Client table " + id + " had a TextKey decoding error while reading a loot function!");
+                    }
                 }
-                pool.map().put(pileQualifierList, pileItemMap);
+
+                ClientRawPool pool = itemMap.getOrDefault(qualifierList, new ClientRawPool(new HashMap<>()));
+
+                int pileSize = buf.readShort();
+                for (int i = 0; i < pileSize; i++) {
+
+                    List<TextKey> pileQualifierList = new LinkedList<>();
+
+                    int pileQualifierSize = buf.readShort();
+                    for (int j = 0; j < pileQualifierSize; j++) {
+                        try {
+                            TextKey key = TextKey.fromBuf(buf);
+                            pileQualifierList.add(key);
+                        } catch (DecoderException e) {
+                            EMILoot.LOGGER.error("Client table " + id + " had a TextKey decoding error while reading an item pile qualifier!");
+                        }
+                    }
+
+                    Object2FloatMap<ItemStack> pileItemMap = pool.map().getOrDefault(pileQualifierList, new Object2FloatOpenHashMap<>());
+
+                    int pileItemSize = buf.readShort();
+                    for (int j = 0; j < pileItemSize; j++) {
+                        ItemStack stack = readItemStack(buf, world);
+                        float weight = buf.readFloat();
+                        pileItemMap.put(stack, weight);
+                        isEmpty = false;
+                    }
+                    pool.map().put(pileQualifierList, pileItemMap);
+                }
+
+                itemMap.put(qualifierList, pool);
             }
+            if (isEmpty) return emptyTableToReturn();
 
-            itemMap.put(qualifierList, pool);
+            return filledTableToReturn(ids, itemMap);
+        } catch (Throwable e) {
+            throw new DecoderException("Parsing of Loot Receiver failed for id: " + id.toString(), e);
         }
-        if (isEmpty) return emptyTableToReturn();
-
-        return filledTableToReturn(ids, itemMap);
     }
 
 }
