@@ -24,6 +24,7 @@
     "ModifyContentsLootFunctionAccessor",
     "ReferenceLootFunctionAccessor",
     "ReloadableRegistriesMixin",
+    "SetAttributesLootFunctionAccessor",
     "SetBookCoverLootFunctionAccessor",
     "SetCountLootFunctionAccessor",
     "SetDamageLootFunctionAccessor",

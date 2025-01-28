@@ -41,8 +41,8 @@ public abstract class IconGroupEmiWidget extends Widget {
         List<SlotWidget> list2 = new LinkedList<>();
         int itemXOffset = iconsWidth + 2;
         for(ConditionalStack entry: pool.stacks()) {
-            String rounded = FloatTrimmer.trimFloatString(entry.weight(), EMILoot.config.chanceDecimalPlaces.get());
-            SlotWidget widget = new SlotWidget(entry.getIngredient(), itemXOffset + x, y + 3).appendTooltip(LText.translatable("emi_loot.percent_chance", rounded));
+            String rounded = FloatTrimmer.trimFloatString(Math.max(entry.weight() / 100f, 0.01f), EMILoot.config.chanceDecimalPlaces.get());
+            SlotWidget widget = new SlotWidget(entry.getIngredient(), itemXOffset + x, y + 3).appendTooltip(LText.translatable("emi_loot.rolls", rounded));
             itemXOffset +=20;
             list2.add(widget);
         }
