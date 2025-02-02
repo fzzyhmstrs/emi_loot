@@ -62,8 +62,7 @@ public class ClientMobLootTable extends AbstractTextKeyParsingClientLootTable<Cl
     }
 
     @Override
-    List<Pair<Integer, Text>> getSpecialTextKeyList(World world, Block block) {
-        return List.of();
+    void getSpecialTextKeyList(World world, Block block, List<Pair<Integer, Text>> inputList) {
     }
 
     @Override
