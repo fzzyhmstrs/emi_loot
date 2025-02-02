@@ -19,6 +19,6 @@ public class LootSimplifiedRenderer implements EmiRenderable {
 
     @Override
     public void render(DrawContext draw, int x, int y, float delta) {
-        draw.drawTexture(SPRITE_SHEET, x, y, u, v, 16, 16, 32, 16);
+        draw.drawTexture(SPRITE_SHEET, x, y, u, v, 16, 16, 32, 32);
     }
 }

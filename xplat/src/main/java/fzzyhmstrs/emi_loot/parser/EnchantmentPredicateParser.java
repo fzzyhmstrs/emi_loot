@@ -11,6 +11,7 @@ import net.minecraft.registry.entry.RegistryEntryList;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -18,7 +19,7 @@ import java.util.Optional;
 public class EnchantmentPredicateParser {
 
     public static Text parseEnchantmentPredicates(List<EnchantmentPredicate> list) {
-        List<MutableText> list2 = new LinkedList<>();
+        List<MutableText> list2 = new ArrayList<>();
         for (EnchantmentPredicate predicate : list) {
             Optional<RegistryEntryList<Enchantment>> enchant = predicate.enchantments();
             if (enchant.isPresent() && enchant.get().getTagKey().isPresent()) {
