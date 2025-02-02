@@ -1,5 +1,6 @@
 package fzzyhmstrs.emi_loot.util;
 
+import com.google.common.base.Suppliers;
 import fzzyhmstrs.emi_loot.EMILoot;
 import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.ItemStack;
@@ -12,10 +13,12 @@ import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Pair;
 import net.minecraft.village.raid.Raid;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -27,6 +30,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public record TextKey(int index, List<String> args) {
 
@@ -39,6 +43,12 @@ public record TextKey(int index, List<String> args) {
     static final BiFunction<ItemStack, World, List<ItemStack>> DEFAULT_PROCESSOR = (stack, world) -> List.of(stack);
     static final Identifier EMPTY = new Identifier(EMILoot.MOD_ID, "textures/gui/empty.png");
     static int curDynamicIndex = 1000;
+
+    public static final Supplier<List<Pair<Integer, Text>>> noConditionsList = Suppliers.memoize(() -> {
+        List<Pair<Integer, Text>> list = new ArrayList<>();
+        list.add(new Pair<>(TextKey.getIndex("emi_loot.no_conditions"), LText.translatable("emi_loot.no_conditions")));
+        return list;
+    });
 
     public static final Set<String> defaultSkips = Set.of("emi_loot.function.set_count_add", "emi_loot.function.set_count_set", "emi_loot.function.fill_player_head", "emi_loot.function.limit_count", "emi_loot.no_conditions");
 
@@ -360,6 +370,15 @@ public record TextKey(int index, List<String> args) {
 
     public static String symbolKey(int index) {
         return String.valueOf((char)(0xe700 + index));
+    }
+
+    public Text processText() {
+        return keyTextBuilderMap.getOrDefault(this.index, DEFAULT_FUNCTION).apply(this);
+    }
+
+    public List<ItemStack> processStack(ItemStack stack, @Nullable World world) {
+        BiFunction<ItemStack, World, List<ItemStack>> processor = processorMap.getOrDefault(this.index, DEFAULT_PROCESSOR);
+        return processor.apply(stack, world);
     }
 
     public TextKeyResult process(ItemStack stack, @Nullable World world) {
