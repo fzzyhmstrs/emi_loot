@@ -21,7 +21,7 @@ public class BlockStatePropertyConditionParser implements ConditionParser {
         MutableText bsText;
         Block block = ((BlockStatePropertyLootCondition)condition).block().value();
         if (block != null) {
-            bsText = LText.translatable("emi_loot.condition.blockstate.block",block.getName().getString());
+            bsText = LText.translatable("emi_loot.condition.blockstate.block", block.getName().getString());
         } else {
             StatePredicate predicate = ((BlockStatePropertyLootCondition)condition).properties().orElseThrow(); // TODO?
             bsText = (MutableText) StatePredicateParser.parseStatePredicate(predicate);

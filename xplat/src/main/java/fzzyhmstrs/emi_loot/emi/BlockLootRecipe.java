@@ -42,23 +42,27 @@ public class BlockLootRecipe implements EmiRecipe {
         Block block = Registries.BLOCK.get(blockId);
         loot.build(MinecraftClient.getInstance().world, block);
         inputStack = block.asItem() == Items.AIR ? new BlockStateEmiStack(block.getDefaultState(), blockId) : EmiStack.of(block);
-        List<EmiStack> list = new LinkedList<>();
-        loot.builtItems.forEach((builtPool)-> {
-            builtPool.stacks().forEach(stack -> {
-                /*if (weight < 100f) {
+        List<EmiStack> list = new ArrayList<>();
+        boolean allStacksGuaranteed = true;
+        for (ClientBuiltPool builtPool : loot.builtItems) {
+            for (ConditionalStack stack : builtPool.stacks()) {
+                if (stack.weight() < 100f) {
                     allStacksGuaranteed = false;
-                }*/
+                }
                 list.addAll(stack.ingredient());
-            });
+            }
             addWidgetBuilders(builtPool, false);
-        });
+        }
+
+        this.isSimple = loot.isSimple || allStacksGuaranteed;
         outputStacks = list;
     }
 
     private final ClientBlockLootTable loot;
     private final EmiStack inputStack;
     private final List<EmiStack> outputStacks;
-    private final List<WidgetRowBuilder> rowBuilderList = new LinkedList<>();
+    private final List<WidgetRowBuilder> rowBuilderList = new ArrayList<>();
+    private final boolean isSimple;
 
     private void addWidgetBuilders(ClientBuiltPool newPool, boolean recursive) {
         WidgetRowBuilder builder;
@@ -177,7 +181,7 @@ public class BlockLootRecipe implements EmiRecipe {
     //may revisit later
     @Override
     public boolean supportsRecipeTree() {
-        return false;
+        return isSimple;
     }
 
     @Override

@@ -28,11 +28,13 @@ public class ClientBlockLootTable extends AbstractTextKeyParsingClientLootTable<
     private static final Identifier EMPTY = new Identifier("blocks/empty");
     public final Identifier id;
     public final Identifier blockId;
+    public final boolean isSimple;
 
     public ClientBlockLootTable() {
         super();
         this.id = EMPTY;
         this.blockId = new Identifier("air");
+        this.isSimple = false;
     }
 
     public ClientBlockLootTable(Identifier id, Map<List<TextKey>, ClientRawPool> map) {
@@ -46,6 +48,21 @@ public class ClientBlockLootTable extends AbstractTextKeyParsingClientLootTable<
         } else {
             blockId = new Identifier(ns, pth.substring(Math.min(lastSlashIndex + 1, pth.length())));
         }
+        this.isSimple = false;
+    }
+
+    public ClientBlockLootTable(Identifier id, Map<List<TextKey>, ClientRawPool> map, boolean isSimple) {
+        super(map);
+        this.id = id;
+        String ns = id.getNamespace();
+        String pth = id.getPath();
+        int lastSlashIndex = pth.lastIndexOf('/');
+        if (lastSlashIndex == -1) {
+            blockId = Identifier.of(ns, pth);
+        } else {
+            blockId = Identifier.of(ns, pth.substring(Math.min(lastSlashIndex + 1, pth.length())));
+        }
+        this.isSimple = true;
     }
 
     @Override
@@ -59,7 +76,7 @@ public class ClientBlockLootTable extends AbstractTextKeyParsingClientLootTable<
     }
 
     @Override
-    List<Pair<Integer, Text>> getSpecialTextKeyList(World world, Block block) {
+    void getSpecialTextKeyList(World world, Block block, List<Pair<Integer, Text>> inputList) {
         String tool = "";
         if (block.getRegistryEntry().isIn(BlockTags.PICKAXE_MINEABLE)) {
             tool = "pickaxe";
@@ -70,7 +87,6 @@ public class ClientBlockLootTable extends AbstractTextKeyParsingClientLootTable<
         } else if (block.getRegistryEntry().isIn(BlockTags.HOE_MINEABLE)) {
             tool = "hoe";
         }
-        List<Pair<Integer, Text>> toolNeededList = new LinkedList<>();
         if (!Objects.equals(tool, "")) {
             String type;
             if (block.getRegistryEntry().isIn(BlockTags.NEEDS_STONE_TOOL)) {
@@ -85,10 +101,9 @@ public class ClientBlockLootTable extends AbstractTextKeyParsingClientLootTable<
             String keyString = "emi_loot." + tool + "." + type;
             int keyIndex = TextKey.getIndex(keyString);
             if (keyIndex != -1) {
-                toolNeededList.add(new Pair<>(keyIndex, LText.translatable(keyString)));
+                inputList.add(new Pair<>(keyIndex, LText.translatable(keyString)));
             }
         }
-        return toolNeededList;
     }
 
     @Override
@@ -105,7 +120,7 @@ public class ClientBlockLootTable extends AbstractTextKeyParsingClientLootTable<
         simplePool.map().put(new ArrayList<>(), simpleMap);
         Map<List<TextKey>, ClientRawPool> itemMap = new HashMap<>();
         itemMap.put(new ArrayList<>(), simplePool);
-        return new ClientBlockLootTable(ids.getLeft(), itemMap);
+        return new ClientBlockLootTable(ids.getLeft(), itemMap, true);
     }
 
     @Override

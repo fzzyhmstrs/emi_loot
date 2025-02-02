@@ -59,36 +59,7 @@ public class ClientGameplayLootTable extends AbstractTextKeyParsingClientLootTab
     }
 
     @Override
-    List<Pair<Integer, Text>> getSpecialTextKeyList(World world, Block block) {
-        String tool = "";
-        if (block.getRegistryEntry().isIn(BlockTags.PICKAXE_MINEABLE)) {
-            tool = "pickaxe";
-        } else if (block.getRegistryEntry().isIn(BlockTags.AXE_MINEABLE)) {
-            tool = "axe";
-        } else if (block.getRegistryEntry().isIn(BlockTags.SHOVEL_MINEABLE)) {
-            tool = "shovel";
-        } else if (block.getRegistryEntry().isIn(BlockTags.HOE_MINEABLE)) {
-            tool = "hoe";
-        }
-        List<Pair<Integer, Text>> toolNeededList = new LinkedList<>();
-        if (!Objects.equals(tool, "")) {
-            String type;
-            if (block.getRegistryEntry().isIn(BlockTags.NEEDS_STONE_TOOL)) {
-                type = "stone";
-            } else if (block.getRegistryEntry().isIn(BlockTags.NEEDS_IRON_TOOL)) {
-                type = "iron";
-            } else if (block.getRegistryEntry().isIn(BlockTags.NEEDS_DIAMOND_TOOL)) {
-                type = "diamond";
-            } else {
-                type = "wood";
-            }
-            String keyString = "emi_loot." + tool + "." + type;
-            int keyIndex = TextKey.getIndex(keyString);
-            if (keyIndex != -1) {
-                toolNeededList.add(new Pair<>(keyIndex, LText.translatable(keyString)));
-            }
-        }
-        return toolNeededList;
+    void getSpecialTextKeyList(World world, Block block, List<Pair<Integer, Text>> inputList) {
     }
 
     @Override
