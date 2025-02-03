@@ -6,6 +6,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.Identifier;
+import net.minecraft.world.World;
 
 public class ClientArchaeologyLootTable implements LootReceiver {
 	public static ClientArchaeologyLootTable INSTANCE = new ClientArchaeologyLootTable();
@@ -32,7 +33,7 @@ public class ClientArchaeologyLootTable implements LootReceiver {
 	}
 
 	@Override
-	public LootReceiver fromBuf(PacketByteBuf buf) {
+	public LootReceiver fromBuf(PacketByteBuf buf, World world) {
 		Identifier id = AbstractTextKeyParsingClientLootTable.getIdFromBuf(buf);
 		int mapCount = buf.readShort();
 		Object2FloatMap<ItemStack> itemMap = new Object2FloatOpenHashMap<>();
