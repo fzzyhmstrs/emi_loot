@@ -99,7 +99,7 @@ public class MobLootRecipe implements EmiRecipe {
                 try {
                     addWidgetBuilders(builtPool, false);
                 } catch (Throwable e) {
-                    EmiLoot.LOGGER.error("Error encountered while preparing layout for mob recipe {}, display may be incomplete.", loot.id);
+                    EMILoot.LOGGER.error("Error encountered while preparing layout for mob recipe {}, display may be incomplete.", loot.id);
                     e.printStackTrace();
                 }
             }
