@@ -3,6 +3,7 @@ package fzzyhmstrs.emi_loot.util;
 import com.mojang.blaze3d.systems.RenderSystem;
 import dev.emi.emi.api.render.EmiTooltipComponents;
 import dev.emi.emi.api.stack.EmiStack;
+import fzzyhmstrs.emi_loot.EMILoot;
 import fzzyhmstrs.emi_loot.EMILootAgnos;
 import fzzyhmstrs.emi_loot.client.ClientResourceData;
 import net.minecraft.client.MinecraftClient;
@@ -21,6 +22,7 @@ import net.minecraft.registry.Registries;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Util;
 import net.minecraft.util.math.MathHelper;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Quaternionf;
@@ -72,11 +74,18 @@ public class EntityEmiStack extends EmiStack {
 
     @Override
     public void render(DrawContext matrices, int x, int y, float delta, int flags) {
-        if (entity != null) {
-            if (entity instanceof LivingEntity living)
-                renderEntity(matrices.getMatrices(), x + 8, (int) (y + 8 + ctx.size), ctx, living);
-            else
-                renderEntity(matrices.getMatrices(), (int) (x + (2 * ctx.size / 2)), (int) (y + (2 * ctx.size)), ctx, entity);
+        try {
+            if (entity != null) {
+                if (entity instanceof LivingEntity living)
+                    renderEntity(matrices.getMatrices(), x + 8, (int) (y + 8 + ctx.size), ctx, living);
+                else
+                    renderEntity(matrices.getMatrices(), (int) (x + (2 * ctx.size / 2)), (int) (y + (2 * ctx.size)), ctx, entity);
+            }
+        } catch (Throwable e) {
+            // woopsie doopsies
+            if (EMILoot.DEBUG && Util.getMeasuringTimeMs() % 1000 == 0) {
+                EMILoot.LOGGER.error("Rendering error for entity stack" + this.toString());
+            }
         }
     }
 
