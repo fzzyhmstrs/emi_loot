@@ -50,7 +50,7 @@ dependencies {
 
     modRuntimeOnly "maven.modrinth:kotlin-for-forge:${rootProject.kff_version}"
 
-    modRuntimeOnly "me.fzzyhmstrs:fzzy_config:${rootProject.fzzy_config_version}+neoforge"
+    modRuntimeOnly "me.fzzyhmstrs:fzzy_config:${rootProject.fzzy_config_version}+forge"
     //modRuntimeOnly "maven.modrinth:symbols-n-stuff:${rootProject.sns_version}"
 
 
