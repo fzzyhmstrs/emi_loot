@@ -27,9 +27,9 @@ public class ClientLootTables {
         loots.clear();
     }
 
-    void receiveChestSender(PacketByteBuf buf, World world) {
+    void receiveChestSender(PacketByteBuf buf) {
         try {
-            LootReceiver table = ClientChestLootTable.INSTANCE.fromBuf(buf, world);
+            LootReceiver table = ClientChestLootTable.INSTANCE.fromBuf(buf);
             loots.add(table);
             if (EMILoot.config.isDebug(EMILoot.Type.CHEST)) EMILoot.LOGGER.info("received chest {}", table.getId());
         } catch (Throwable e) {
@@ -38,9 +38,9 @@ public class ClientLootTables {
         }
     }
 
-    void receiveBlockSender(PacketByteBuf buf, World world) {
+    void receiveBlockSender(PacketByteBuf buf) {
         try {
-            LootReceiver table = ClientBlockLootTable.INSTANCE.fromBuf(buf, world);
+            LootReceiver table = ClientBlockLootTable.INSTANCE.fromBuf(buf);
             loots.add(table);
             if (EMILoot.config.isDebug(EMILoot.Type.BLOCK)) EMILoot.LOGGER.info("received block {}", table.getId());
         } catch (Throwable e) {
@@ -49,9 +49,9 @@ public class ClientLootTables {
         }
     }
 
-    void receiveMobSender(PacketByteBuf buf, World world) {
+    void receiveMobSender(PacketByteBuf buf) {
         try {
-            LootReceiver table = ClientMobLootTable.INSTANCE.fromBuf(buf, world);
+            LootReceiver table = ClientMobLootTable.INSTANCE.fromBuf(buf);
             loots.add(table);
             if (EMILoot.config.isDebug(EMILoot.Type.MOB)) EMILoot.LOGGER.info("received mob {}", table.getId());
         } catch (Throwable e) {
@@ -60,9 +60,9 @@ public class ClientLootTables {
         }
     }
 
-    void receiveGameplaySender(PacketByteBuf buf, World world) {
+    void receiveGameplaySender(PacketByteBuf buf) {
         try {
-            LootReceiver table = ClientGameplayLootTable.INSTANCE.fromBuf(buf, world);
+            LootReceiver table = ClientGameplayLootTable.INSTANCE.fromBuf(buf);
             loots.add(table);
             if (EMILoot.config.isDebug(EMILoot.Type.GAMEPLAY)) EMILoot.LOGGER.info("received gameplay loot: {}", table.getId());
         } catch (Throwable e) {
@@ -71,9 +71,9 @@ public class ClientLootTables {
         }
     }
 
-    void receiveArchaeologySender(PacketByteBuf buf, World world) {
+    void receiveArchaeologySender(PacketByteBuf buf) {
         try {
-            LootReceiver table = ClientArchaeologyLootTable.INSTANCE.fromBuf(buf, world);
+            LootReceiver table = ClientArchaeologyLootTable.INSTANCE.fromBuf(buf);
             loots.add(table);
             if (EMILoot.config.isDebug(EMILoot.Type.ARCHAEOLOGY)) EMILoot.LOGGER.info("received archaeology loot: {}", table.getId());
         } catch (Throwable e) {
