@@ -33,12 +33,12 @@ public class ClientArchaeologyLootTable implements LootReceiver {
 	}
 
 	@Override
-	public LootReceiver fromBuf(PacketByteBuf buf, World world) {
+	public LootReceiver fromBuf(PacketByteBuf buf) {
 		Identifier id = AbstractTextKeyParsingClientLootTable.getIdFromBuf(buf);
 		int mapCount = buf.readShort();
 		Object2FloatMap<ItemStack> itemMap = new Object2FloatOpenHashMap<>();
 		for(int i = 0; i < mapCount; i++) {
-			ItemStack item = readItemStack(buf, world);
+			ItemStack item = readItemStack(buf);
 			float itemWeight = buf.readFloat();
 			if(item.isOf(Items.AIR)) continue;
 			itemMap.put(item, itemWeight);

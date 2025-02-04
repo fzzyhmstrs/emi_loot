@@ -18,10 +18,10 @@ import java.util.function.Function;
 public interface LootReceiver {
     boolean isEmpty();
     Identifier getId();
-    LootReceiver fromBuf(PacketByteBuf buf, World world);
+    LootReceiver fromBuf(PacketByteBuf buf);
 
-    default ItemStack readItemStack(PacketByteBuf buf, World world) {
-        RegistryEntry<Item> byId = Registries.ITEM.getEntry(Registries.ITEM.get(buf.readVarInt()));
+    default ItemStack readItemStack(PacketByteBuf buf) {
+       Item byId = Registries.ITEM.get(buf.readVarInt());
         int count = buf.readVarInt();
         if (buf.readBoolean()) {
             NbtElement nbt = buf.readNbt();

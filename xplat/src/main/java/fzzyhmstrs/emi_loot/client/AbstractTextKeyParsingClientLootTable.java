@@ -10,7 +10,6 @@ import it.unimi.dsi.fastutil.floats.Float2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2FloatMap;
 import it.unimi.dsi.fastutil.objects.Object2FloatOpenHashMap;
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockTypes;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.registry.Registries;
@@ -72,12 +71,7 @@ abstract public class AbstractTextKeyParsingClientLootTable<T extends LootReceiv
                 Text text = textKey.processText();
                 applyToAllList.add(new Pair<>(textKey.index(), text));
             }
-            if (bl) System.out.println(applyToAllList);
-            if (bl) System.out.println();
             pool.map().forEach((poolList, poolItemMap)-> {
-                if (bl) System.out.println(poolList);
-                if (bl) System.out.println(poolItemMap);
-                if (bl) System.out.println();
                 List<Pair<Integer, Text>> newPoolList = new ArrayList<>();
                 Object2FloatMap<ItemStack> itemsToAdd = new Object2FloatOpenHashMap<>();
                 List<ItemStack> itemsToRemove = new ArrayList<>();
@@ -85,7 +79,6 @@ abstract public class AbstractTextKeyParsingClientLootTable<T extends LootReceiv
                 for (TextKey textKey : poolList) {
                     poolItemMap.forEach((poolStack, weight)-> {
                         List<ItemStack> stacks = textKey.processStack(poolStack, world);
-                        if (bl) System.out.println(stacks);
                         float toAddWeight = 1.0f;
                         if (!stacks.contains(poolStack)) {
                             itemsToRemove.add(poolStack);
@@ -183,7 +176,7 @@ abstract public class AbstractTextKeyParsingClientLootTable<T extends LootReceiv
     abstract T filledTableToReturn(Pair<Identifier, Identifier> ids, Map<List<TextKey>, ClientRawPool> itemMap);
 
     @Override
-    public LootReceiver fromBuf(PacketByteBuf buf, World world) {
+    public LootReceiver fromBuf(PacketByteBuf buf) {
         boolean isEmpty = true;
         Pair<Identifier, Identifier> ids;
         Identifier id;
@@ -250,7 +243,7 @@ abstract public class AbstractTextKeyParsingClientLootTable<T extends LootReceiv
 
                     int pileItemSize = buf.readShort();
                     for (int j = 0; j < pileItemSize; j++) {
-                        ItemStack stack = readItemStack(buf, world);
+                        ItemStack stack = readItemStack(buf);
                         float weight = buf.readFloat();
                         pileItemMap.put(stack, weight);
                         isEmpty = false;
