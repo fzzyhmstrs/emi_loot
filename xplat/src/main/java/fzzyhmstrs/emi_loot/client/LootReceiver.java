@@ -21,7 +21,7 @@ public interface LootReceiver {
     LootReceiver fromBuf(PacketByteBuf buf);
 
     default ItemStack readItemStack(PacketByteBuf buf) {
-       Item byId = Registries.ITEM.get(buf.readVarInt());
+       RegistryEntry<Item> byId = Registries.ITEM.getEntry(Registries.ITEM.get(buf.readVarInt()));
         int count = buf.readVarInt();
         if (buf.readBoolean()) {
             NbtElement nbt = buf.readNbt();
