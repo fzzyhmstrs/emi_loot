@@ -34,7 +34,7 @@ public class ArchaeologyLootTableSender implements LootSender<ArchaeologyLootPoo
 		buf.writeString(idToSend);
 		buf.writeShort(floatMap.size());
 		floatMap.forEach((item, floatWeight) -> {
-			buf.writeItemStack(item);
+			writeItemStack(buf, item, player.getWorld());
 			buf.writeFloat(floatWeight);
 		});
 		ConfigApi.INSTANCE.network().send(new SimpleFzzyPayload(buf, ARCHAEOLOGY_SENDER), player);
