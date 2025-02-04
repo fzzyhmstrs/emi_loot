@@ -98,7 +98,7 @@ public class MobLootTableSender implements LootSender<MobLootPoolBuilder> {
 
                 //for each itemstack, write the stack and weight
                 keyPoolMap.forEach((stack, weight)-> {
-                    buf.writeItemStack(stack);
+                    writeItemStack(buf, stack, player.getWorld());
                     buf.writeFloat(weight);
                 });
             });

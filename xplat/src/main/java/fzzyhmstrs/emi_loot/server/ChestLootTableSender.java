@@ -50,7 +50,7 @@ public class ChestLootTableSender implements LootSender<ChestLootPoolBuilder> {
         buf.writeString(idToSend);
         buf.writeShort(floatMap.size());
         floatMap.forEach((item, floatWeight) -> {
-            buf.writeItemStack(item);
+            writeItemStack(buf, item, player.getWorld());
             buf.writeFloat(floatWeight);
         });
         ConfigApi.INSTANCE.network().send(new SimpleCustomPayload(buf, CHEST_SENDER), player);

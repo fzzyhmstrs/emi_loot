@@ -93,7 +93,7 @@ public class GameplayLootTableSender implements LootSender<GameplayLootPoolBuild
 
                 //for each itemstack, write the stack and weight
                 keyPoolMap.forEach((stack, weight)-> {
-                    buf.writeItemStack(stack);
+                    writeItemStack(buf, stack, player.getWorld());
                     buf.writeFloat(weight);
                 });
             });
